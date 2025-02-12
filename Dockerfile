@@ -1,4 +1,4 @@
-FROM golang:1.15 as build
+FROM golang:1.23 AS build
 
 # Create appuser.
 # See https://stackoverflow.com/a/55757473/12429735
@@ -14,12 +14,13 @@ RUN adduser \
     "${USER}"
 
 RUN apt-get update && apt-get install -y ca-certificates
-RUN go get github.com/rakyll/hey
-
 # Build
-WORKDIR /go/src/github.com/rakyll/hey
+WORKDIR /app
+COPY go.mod go.mod
+COPY go.sum go.sum
 RUN go mod download
-RUN CGO_ENABLED=0 GOOS=linux go build -o /go/bin/hey hey.go
+COPY . .
+RUN ls -alh && CGO_ENABLED=0 GOOS=linux go build -o /go/bin/hey hey.go
 
 ###############################################################################
 # final stage
@@ -31,10 +32,10 @@ USER appuser:appuser
 
 ARG APPLICATION="hey"
 ARG DESCRIPTION="HTTP load generator, ApacheBench (ab) replacement, formerly known as rakyll/boom"
-ARG PACKAGE="rakyll/hey"
+ARG PACKAGE="jukie/hey"
 
 LABEL org.opencontainers.image.ref.name="${PACKAGE}" \
-    org.opencontainers.image.authors="Jaana Dogan <@rakyll>" \
+    org.opencontainers.image.authors="Isaac <@Jukie>" \
     org.opencontainers.image.documentation="https://github.com/${PACKAGE}/README.md" \
     org.opencontainers.image.description="${DESCRIPTION}" \
     org.opencontainers.image.licenses="Apache 2.0" \
